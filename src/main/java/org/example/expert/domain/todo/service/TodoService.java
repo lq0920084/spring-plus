@@ -17,6 +17,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+
 @Service
 @RequiredArgsConstructor
 public class TodoService {
@@ -46,21 +50,39 @@ public class TodoService {
                 new UserResponse(user.getId(), user.getEmail(), user.getNickname())
         );
     }
+
     @Transactional(readOnly = true)
-    public Page<TodoResponse> getTodos(int page, int size) {
+    public Page<TodoResponse> getTodos(String weather, LocalDate startDate, LocalDate endDate, int page, int size) {
         Pageable pageable = PageRequest.of(page - 1, size);
 
-        Page<Todo> todos = todoRepository.findAllByOrderByModifiedAtDesc(pageable);
+        LocalDateTime startDateTime = LocalDateTime.of(startDate, LocalTime.MIN);
+        LocalDateTime endDateTime = LocalDateTime.of(endDate, LocalTime.MAX);
 
-        return todos.map(todo -> new TodoResponse(
-                todo.getId(),
-                todo.getTitle(),
-                todo.getContents(),
-                todo.getWeather(),
-                new UserResponse(todo.getUser().getId(), todo.getUser().getEmail(), todo.getUser().getNickname()),
-                todo.getCreatedAt(),
-                todo.getModifiedAt()
-        ));
+        if (weather.equals("weather")) {
+            Page<Todo> todos = todoRepository.findAllWeatherAndDate(startDateTime, endDateTime, pageable);
+            return todos.map(todo -> new TodoResponse(
+                    todo.getId(),
+                    todo.getTitle(),
+                    todo.getContents(),
+                    todo.getWeather(),
+                    new UserResponse(todo.getUser().getId(), todo.getUser().getEmail(), todo.getUser().getNickname()),
+                    todo.getCreatedAt(),
+                    todo.getModifiedAt()
+            ));
+        } else {
+            Page<Todo> todos = todoRepository.findWeatherAndDate(weather, startDateTime, endDateTime, pageable);
+            return todos.map(todo -> new TodoResponse(
+                    todo.getId(),
+                    todo.getTitle(),
+                    todo.getContents(),
+                    todo.getWeather(),
+                    new UserResponse(todo.getUser().getId(), todo.getUser().getEmail(), todo.getUser().getNickname()),
+                    todo.getCreatedAt(),
+                    todo.getModifiedAt()
+            ));
+        }
+
+
     }
 
     @Transactional(readOnly = true)

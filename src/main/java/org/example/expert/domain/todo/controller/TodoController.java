@@ -9,8 +9,11 @@ import org.example.expert.domain.todo.dto.response.TodoResponse;
 import org.example.expert.domain.todo.dto.response.TodoSaveResponse;
 import org.example.expert.domain.todo.service.TodoService;
 import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,10 +31,13 @@ public class TodoController {
 
     @GetMapping("/todos")
     public ResponseEntity<Page<TodoResponse>> getTodos(
+            @RequestParam(defaultValue = "weather") String weather,
+            @RequestParam(defaultValue = "0001-01-01") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+            @RequestParam(defaultValue = "9999-12-13") @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return ResponseEntity.ok(todoService.getTodos(page, size));
+        return ResponseEntity.ok(todoService.getTodos(weather, startDate, endDate, page, size));
     }
 
     @GetMapping("/todos/{todoId}")
