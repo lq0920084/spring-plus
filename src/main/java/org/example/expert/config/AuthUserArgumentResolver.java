@@ -1,16 +1,23 @@
 package org.example.expert.config;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.example.expert.domain.auth.dto.response.CustomUserDetails;
 import org.example.expert.domain.auth.exception.AuthException;
 import org.example.expert.domain.common.annotation.Auth;
 import org.example.expert.domain.common.dto.AuthUser;
 import org.example.expert.domain.user.enums.UserRole;
 import org.springframework.core.MethodParameter;
 import org.springframework.lang.Nullable;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
+
+import java.util.Collection;
+import java.util.Iterator;
 
 public class AuthUserArgumentResolver implements HandlerMethodArgumentResolver {
 
@@ -36,11 +43,15 @@ public class AuthUserArgumentResolver implements HandlerMethodArgumentResolver {
     ) {
         HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
 
+        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         // JwtFilter 에서 set 한 userId, email, nickname, userRole 값을 가져옴
-        Long userId = (Long) request.getAttribute("userId");
-        String email = (String) request.getAttribute("email");
-        String nickname = (String) request.getAttribute("nickname");
-        UserRole userRole = UserRole.of((String) request.getAttribute("userRole"));
+        Long userId = userDetails.getId();
+        String email = userDetails.getUsername();
+        String nickname = userDetails.getNickname();
+        Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
+        Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
+        System.out.println(email);
+        UserRole userRole = UserRole.of(iterator.next().getAuthority());
 
         return new AuthUser(userId, email, nickname,  userRole);
     }
